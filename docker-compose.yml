@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./data/sumario.db
+    volumes:
+      - ./atividades.json:/app/atividades.json:Z
+      - ./data:/app/data:Z
