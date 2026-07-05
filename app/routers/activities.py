@@ -4,46 +4,39 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Activity
-from app.schemas import ActivityUpdate
+from app.schemas import ActivityUpdate, ActivityResponse
 
 router = APIRouter(prefix="/api/activities", tags=["api"])
 
 
-def _to_dict(a: Activity) -> dict:
-    return {
-        "id": a.id,
-        "title": a.title,
-        "tags": a.tags,
-        "content": a.content,
-        "page_number": a.page_number,
-        "analysis": a.analysis,
-        "created_at": a.created_at.isoformat() if a.created_at else None,
-    }
-
-
-@router.get("")
+@router.get("", response_model=list[ActivityResponse])
 def list_activities(
-    q: Optional[str] = None,
+    search_term: Optional[str] = None,
     tag: Optional[str] = None,
+    status: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
     query = db.query(Activity)
-    if q:
-        query = query.filter(Activity.title.ilike(f"%{q}%"))
+    if search_term:
+        query = query.filter(Activity.title.ilike(f"%{search_term}%"))
     if tag:
         query = query.filter(Activity.tags.ilike(f"%{tag}%"))
-    return [_to_dict(a) for a in query.order_by(Activity.page_number).all()]
+    if status == "done":
+        query = query.filter(Activity.analysis != None, Activity.analysis != "")
+    elif status == "pending":
+        query = query.filter((Activity.analysis == None) | (Activity.analysis == ""))
+    return query.order_by(Activity.page_number).all()
 
 
-@router.get("/{activity_id}")
+@router.get("/{activity_id}", response_model=ActivityResponse)
 def get_activity(activity_id: int, db: Session = Depends(get_db)):
     a = db.query(Activity).filter(Activity.id == activity_id).first()
     if not a:
         raise HTTPException(404, "Atividade não encontrada")
-    return _to_dict(a)
+    return a
 
 
-@router.put("/{activity_id}")
+@router.put("/{activity_id}", response_model=ActivityResponse)
 def update_activity(
     activity_id: int,
     data: ActivityUpdate,
@@ -56,14 +49,4 @@ def update_activity(
         setattr(a, field, value)
     db.commit()
     db.refresh(a)
-    return _to_dict(a)
-
-
-@router.delete("/{activity_id}")
-def delete_activity(activity_id: int, db: Session = Depends(get_db)):
-    a = db.query(Activity).filter(Activity.id == activity_id).first()
-    if not a:
-        raise HTTPException(404, "Atividade não encontrada")
-    db.delete(a)
-    db.commit()
-    return {"ok": True}
+    return a

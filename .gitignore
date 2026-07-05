@@ -1,0 +1,15 @@
+**/__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.python-version
+
+.venv
+
+data/
+
+sumario.db
+
+.env
