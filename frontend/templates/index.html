@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Buscar Atividades - 365 STEM{% endblock %}
+{% block content %}
+<div class="search-box">
+    <h1>365 Atividades STEM</h1>
+    <p>Busque atividades por nome ou tag</p>
+    <div class="search-form">
+        <input type="text" id="searchTerm" placeholder="Digite o nome da atividade..." autofocus>
+        <select id="tagFilter">
+            <option value="">Todas as tags</option>
+            <option value="ciência">Ciência</option>
+            <option value="tecnologia">Tecnologia</option>
+            <option value="engenharia">Engenharia</option>
+            <option value="matemática">Matemática</option>
+            <option value="arte">Arte</option>
+        </select>
+        <select id="statusFilter">
+            <option value="">Todas</option>
+            <option value="done">Com análise</option>
+            <option value="pending">Sem análise</option>
+        </select>
+        <button onclick="buscar()">Buscar</button>
+    </div>
+</div>
+
+<div id="results" class="results"></div>
+
+<script>
+    const input = document.getElementById("searchTerm");
+    input.addEventListener("keyup", (e) => { if (e.key === "Enter") buscar(); });
+
+    async function buscar() {
+        const searchTerm = document.getElementById("searchTerm").value.trim();
+        const tag = document.getElementById("tagFilter").value;
+        const status = document.getElementById("statusFilter").value;
+        let url = "/api/activities?";
+        if (searchTerm) url += "search_term=" + encodeURIComponent(searchTerm) + "&";
+        if (tag) url += "tag=" + encodeURIComponent(tag) + "&";
+        if (status) url += "status=" + encodeURIComponent(status);
+        const res = await fetch(url);
+        const data = await res.json();
+        const container = document.getElementById("results");
+        if (data.length === 0) {
+            container.innerHTML = "<p class='empty'>Nenhuma atividade encontrada.</p>";
+            return;
+        }
+        let html = `<p class="count">${data.length} atividade(s) encontrada(s)</p>`;
+        html += "<table><thead><tr><th>Página</th><th>Título</th><th>Tags</th><th>Análise</th></tr></thead><tbody>";
+        for (const activity of data) {
+            const hasAnalysis = activity.analysis
+              ? '<span class="badge badge-done">Feito</span>'
+              : '<span class="badge badge-pending">Pendente</span>';
+            html += `<tr>
+                <td class="page">${activity.page_number}</td>
+                <td><a href="/atividade/${activity.id}" class="title-link">${activity.title}</a></td>
+                <td class="tags">${formatTags(activity.tags)}</td>
+                <td class="analysis-icon">${hasAnalysis}</td>
+            </tr>`;
+        }
+        html += "</tbody></table>";
+        container.innerHTML = html;
+    }
+
+    function formatTags(tags) {
+        if (!tags) return "";
+        return tags.split(",").map(t => `<span class="tag">${t.trim()}</span>`).join(" ");
+    }
+
+    buscar();
+</script>
+{% endblock %}

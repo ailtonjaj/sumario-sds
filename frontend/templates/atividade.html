@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Atividade - 365 STEM{% endblock %}
+{% block content %}
+<div class="atividade" id="app">
+    <div id="loading">Carregando...</div>
+    <div id="activity-detail" style="display:none">
+        <div class="atv-header">
+            <a href="/" class="btn-back">&larr; Voltar</a>
+            <span class="page-label">Página <span id="pageNumber"></span></span>
+        </div>
+        <h1 id="title"></h1>
+        <div id="tags"></div>
+        <div class="section">
+            <h3>
+                Análise
+                <button class="btn-edit" onclick="toggleEdit()" title="Editar análise">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                    </svg>
+                </button>
+            </h3>
+            <div id="analysisDisplay" class="analysis-display" style="display:none">
+                <p id="analysisText"></p>
+            </div>
+            <div id="analysisEdit" style="display:none">
+                <textarea id="analysisInput" rows="6"></textarea>
+                <div class="edit-controls">
+                    <button class="btn-save" onclick="saveAnalysis()">Salvar</button>
+                    <button class="btn-cancel" onclick="cancelEdit()">Cancelar</button>
+                    <span id="saveMsg"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const activityId = {{ activity_id }};
+
+    async function carregar() {
+        const res = await fetch(`/api/activities/${activityId}`);
+        const activity = await res.json();
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("activity-detail").style.display = "block";
+        document.getElementById("title").textContent = activity.title;
+        document.getElementById("pageNumber").textContent = activity.page_number;
+        document.getElementById("tags").innerHTML = formatTags(activity.tags);
+
+        const analysis = activity.analysis || "";
+        document.getElementById("analysisInput").value = analysis;
+        document.getElementById("analysisText").textContent = analysis;
+
+        if (analysis) {
+            document.getElementById("analysisDisplay").style.display = "";
+            document.getElementById("analysisEdit").style.display = "none";
+        } else {
+            document.getElementById("analysisDisplay").style.display = "none";
+            document.getElementById("analysisEdit").style.display = "";
+        }
+    }
+
+    function toggleEdit() {
+        document.getElementById("analysisDisplay").style.display = "none";
+        document.getElementById("analysisEdit").style.display = "";
+        document.getElementById("analysisInput").focus();
+    }
+
+    function cancelEdit() {
+        const res = document.getElementById("analysisText").textContent;
+        document.getElementById("analysisInput").value = res;
+        document.getElementById("analysisDisplay").style.display = "";
+        document.getElementById("analysisEdit").style.display = "none";
+        document.getElementById("saveMsg").textContent = "";
+    }
+
+    async function saveAnalysis() {
+        const analysisText = document.getElementById("analysisInput").value;
+        const res = await fetch(`/api/activities/${activityId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ analysis: analysisText })
+        });
+        if (res.ok) {
+            document.getElementById("analysisText").textContent = analysisText;
+            document.getElementById("analysisDisplay").style.display = "";
+            document.getElementById("analysisEdit").style.display = "none";
+            document.getElementById("saveMsg").textContent = "";
+        } else {
+            document.getElementById("saveMsg").textContent = "Erro ao salvar";
+            document.getElementById("saveMsg").className = "error";
+            setTimeout(() => document.getElementById("saveMsg").textContent = "", 3000);
+        }
+    }
+
+    function formatTags(tags) {
+        if (!tags) return "";
+        return tags.split(",").map(t => `<span class="tag">${t.trim()}</span>`).join(" ");
+    }
+
+    carregar();
+</script>
+{% endblock %}
