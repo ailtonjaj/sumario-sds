@@ -45,12 +45,13 @@
             return;
         }
         let html = `<p class="count">${data.length} atividade(s) encontrada(s)</p>`;
-        html += "<table><thead><tr><th>Página</th><th>Título</th><th>Tags</th><th>Análise</th></tr></thead><tbody>";
+        html += "<table><thead><tr><th>Nº</th><th>Página</th><th>Título</th><th>Tags</th><th>Análise</th></tr></thead><tbody>";
         for (const activity of data) {
             const hasAnalysis = activity.analysis
               ? '<span class="badge badge-done">Feito</span>'
               : '<span class="badge badge-pending">Pendente</span>';
             html += `<tr>
+                <td class="num">${activity.activity_number}</td>
                 <td class="page">${activity.page_number}</td>
                 <td><a href="/atividade/${activity.id}" class="title-link">${activity.title}</a></td>
                 <td class="tags">${formatTags(activity.tags)}</td>

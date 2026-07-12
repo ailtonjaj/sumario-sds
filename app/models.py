@@ -10,6 +10,7 @@ class Activity(Base):
     __tablename__ = "activities"
 
     id = Column(Integer, primary_key=True, index=True)
+    activity_number = Column(String, nullable=False)
     title = Column(String, nullable=False)
     tags = Column(String, default="")
     page_number = Column(Integer, nullable=False)

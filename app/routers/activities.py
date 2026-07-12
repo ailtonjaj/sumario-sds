@@ -25,7 +25,7 @@ def list_activities(
         query = query.filter(Activity.analysis != None, Activity.analysis != "")
     elif status == "pending":
         query = query.filter((Activity.analysis == None) | (Activity.analysis == ""))
-    return query.order_by(Activity.page_number).all()
+    return query.order_by(Activity.page_number, Activity.activity_number).all()
 
 
 @router.get("/{activity_id}", response_model=ActivityResponse)
