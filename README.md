@@ -27,7 +27,7 @@ git clone <url>
 cd sumario
 
 # 2. Crie o arquivo de ambiente
-cp .env.example .env # Crie uma senha para o banco no .env
+cp .env.example .env # Cole o DATABASE_URL
 
 
 # 3. Suba os serviços
