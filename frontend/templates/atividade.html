@@ -6,7 +6,7 @@
     <div id="activity-detail" style="display:none">
         <div class="atv-header">
             <a href="/" class="btn-back">&larr; Voltar</a>
-            <span class="page-label">Página <span id="pageNumber"></span></span>
+            <span class="page-label">Atividade <span id="activityNumber"></span> &middot; Página <span id="pageNumber"></span></span>
         </div>
         <h1 id="title"></h1>
         <div id="tags"></div>
@@ -44,6 +44,7 @@
         document.getElementById("activity-detail").style.display = "block";
         document.getElementById("title").textContent = activity.title;
         document.getElementById("pageNumber").textContent = activity.page_number;
+        document.getElementById("activityNumber").textContent = activity.activity_number;
         document.getElementById("tags").innerHTML = formatTags(activity.tags);
 
         const analysis = activity.analysis || "";

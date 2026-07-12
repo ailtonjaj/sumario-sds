@@ -21,6 +21,7 @@ def load_from_file(path: str = "sumario.csv"):
                     continue
                 db.add(
                     Activity(
+                        activity_number=(row["número da atividade"]),
                         title=row["título"],
                         tags=row["tags"],
                         page_number=int(row["número da página"]),
