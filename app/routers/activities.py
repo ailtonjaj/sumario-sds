@@ -1,5 +1,6 @@
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -12,7 +13,7 @@ router = APIRouter(prefix="/api/activities", tags=["api"])
 @router.get("", response_model=list[ActivityResponse])
 def list_activities(
     search_term: Optional[str] = None,
-    tag: Optional[str] = None,
+    tag: Optional[list[str]] = Query(default=None),
     status: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
@@ -20,7 +21,7 @@ def list_activities(
     if search_term:
         query = query.filter(Activity.title.ilike(f"%{search_term}%"))
     if tag:
-        query = query.filter(Activity.tags.ilike(f"%{tag}%"))
+        query = query.filter(and_(*[Activity.tags.ilike(f"%{t}%") for t in tag]))
     if status == "done":
         query = query.filter(Activity.analysis != None, Activity.analysis != "")
     elif status == "pending":

@@ -6,19 +6,25 @@
     <p>Busque atividades por nome ou tag</p>
     <div class="search-form">
         <input type="text" id="searchTerm" placeholder="Digite o nome da atividade..." autofocus>
-        <select id="tagFilter">
-            <option value="">Todas as tags</option>
-            <option value="ciência">Ciência</option>
-            <option value="tecnologia">Tecnologia</option>
-            <option value="engenharia">Engenharia</option>
-            <option value="matemática">Matemática</option>
-            <option value="arte">Arte</option>
-        </select>
-        <select id="statusFilter">
-            <option value="">Todas</option>
-            <option value="done">Com análise</option>
-            <option value="pending">Sem análise</option>
-        </select>
+        <details class="tag-filter" id="tagFilter">
+            <summary>Filtrar tags<span class="tag-count" id="tagCount"></span></summary>
+            <div class="tag-filter-options">
+                <label><input type="checkbox" value="ciência">Ciência</label>
+                <label><input type="checkbox" value="tecnologia">Tecnologia</label>
+                <label><input type="checkbox" value="engenharia">Engenharia</label>
+                <label><input type="checkbox" value="matemática">Matemática</label>
+                <label><input type="checkbox" value="arte">Arte</label>
+                <button type="button" class="btn-clear-tags" onclick="limparTags()">Limpar</button>
+            </div>
+        </details>
+        <details class="tag-filter" id="statusFilter">
+            <summary>Filtrar status</summary>
+            <div class="tag-filter-options">
+                <label><input type="radio" name="status" value="" checked>Todas</label>
+                <label><input type="radio" name="status" value="done">Com análise</label>
+                <label><input type="radio" name="status" value="pending">Sem análise</label>
+            </div>
+        </details>
         <button onclick="buscar()">Buscar</button>
     </div>
 </div>
@@ -29,13 +35,32 @@
     const input = document.getElementById("searchTerm");
     input.addEventListener("keyup", (e) => { if (e.key === "Enter") buscar(); });
 
+    const tagCount = document.getElementById("tagCount");
+    function updateTagCount() {
+        const n = document.querySelectorAll("#tagFilter input:checked").length;
+        tagCount.textContent = n > 0 ? ` (${n})` : "";
+    }
+    document.querySelectorAll("#tagFilter input[type=checkbox]").forEach(el => {
+        el.addEventListener("change", updateTagCount);
+    });
+
+    function limparTags() {
+        document.querySelectorAll("#tagFilter input:checked").forEach(el => el.checked = false);
+        updateTagCount();
+        buscar();
+    }
+
     async function buscar() {
+        document.getElementById("tagFilter").removeAttribute("open");
+        document.getElementById("statusFilter").removeAttribute("open");
         const searchTerm = document.getElementById("searchTerm").value.trim();
-        const tag = document.getElementById("tagFilter").value;
-        const status = document.getElementById("statusFilter").value;
+        const tagInputs = document.querySelectorAll("#tagFilter input:checked");
+        const tags = Array.from(tagInputs).map(el => el.value);
+        const statusInput = document.querySelector("#statusFilter input:checked");
+        const status = statusInput ? statusInput.value : "";
         let url = "/api/activities?";
         if (searchTerm) url += "search_term=" + encodeURIComponent(searchTerm) + "&";
-        if (tag) url += "tag=" + encodeURIComponent(tag) + "&";
+        for (const t of tags) url += "tag=" + encodeURIComponent(t) + "&";
         if (status) url += "status=" + encodeURIComponent(status);
         const res = await fetch(url);
         const data = await res.json();
