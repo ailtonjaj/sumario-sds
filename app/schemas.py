@@ -1,4 +1,3 @@
-from typing import Optional
 from pydantic import BaseModel
 
 
@@ -7,15 +6,15 @@ class ActivityBase(BaseModel):
     title: str
     tags: str = ""
     page_number: int
-    analysis: Optional[str] = None
+    analysis: str | None = None
 
 
 class ActivityUpdate(BaseModel):
-    activity_number: Optional[str] = None
-    title: Optional[str] = None
-    tags: Optional[str] = None
-    page_number: Optional[int] = None
-    analysis: Optional[str] = None
+    activity_number: str | None = None
+    title: str | None = None
+    tags: str | None = None
+    page_number: int | None = None
+    analysis: str | None = None
 
 
 class ActivityResponse(ActivityBase):

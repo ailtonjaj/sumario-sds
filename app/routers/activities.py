@@ -1,4 +1,3 @@
-from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
@@ -12,9 +11,9 @@ router = APIRouter(prefix="/api/activities", tags=["api"])
 
 @router.get("", response_model=list[ActivityResponse])
 def list_activities(
-    search_term: Optional[str] = None,
-    tag: Optional[list[str]] = Query(default=None),
-    status: Optional[str] = None,
+    search_term: str | None = None,
+    tag: list[str] | None = Query(default=None),
+    status: str | None = None,
     db: Session = Depends(get_db),
 ):
     query = db.query(Activity)
