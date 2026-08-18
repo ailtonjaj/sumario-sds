@@ -32,6 +32,11 @@
 <div id="results" class="results"></div>
 
 <script>
+    const PAGE_SIZE_OPTIONS = [5, 10, 20];
+    let currentData = [];
+    let currentPage = 1;
+    let pageSize = PAGE_SIZE_OPTIONS[1];
+
     const input = document.getElementById("searchTerm");
     input.addEventListener("keyup", (e) => { if (e.key === "Enter") buscar(); });
 
@@ -63,15 +68,32 @@
         for (const t of tags) url += "tag=" + encodeURIComponent(t) + "&";
         if (status) url += "status=" + encodeURIComponent(status);
         const res = await fetch(url);
-        const data = await res.json();
+        currentData = await res.json();
+        currentPage = 1;
+        renderResults();
+    }
+
+    function renderResults() {
         const container = document.getElementById("results");
-        if (data.length === 0) {
+        if (currentData.length === 0) {
             container.innerHTML = "<p class='empty'>Nenhuma atividade encontrada.</p>";
             return;
         }
-        let html = `<p class="count">${data.length} atividade(s) encontrada(s)</p>`;
-        html += "<table><thead><tr><th>Nº</th><th>Página</th><th>Título</th><th>Tags</th><th>Análise</th></tr></thead><tbody>";
-        for (const activity of data) {
+        const totalPages = Math.max(1, Math.ceil(currentData.length / pageSize));
+        currentPage = Math.min(currentPage, totalPages);
+        const start = (currentPage - 1) * pageSize;
+        const pageItems = currentData.slice(start, start + pageSize);
+
+        let html = `<div class="results-toolbar">
+            <p class="count">${currentData.length} atividade(s) encontrada(s)</p>
+            <label class="page-size-select">Itens por página:
+                <select id="pageSizeSelect">
+                    ${PAGE_SIZE_OPTIONS.map(n => `<option value="${n}" ${n === pageSize ? "selected" : ""}>${n}</option>`).join("")}
+                </select>
+            </label>
+        </div>`;
+        html += '<div class="results-scroll"><table><thead><tr><th>Nº</th><th>Página</th><th>Título</th><th>Tags</th><th>Análise</th></tr></thead><tbody>';
+        for (const activity of pageItems) {
             const hasAnalysis = activity.analysis
               ? '<span class="badge badge-done">Feito</span>'
               : '<span class="badge badge-pending">Pendente</span>';
@@ -83,8 +105,25 @@
                 <td class="analysis-icon">${hasAnalysis}</td>
             </tr>`;
         }
-        html += "</tbody></table>";
+        html += "</tbody></table></div>";
+        html += `<div class="pagination">
+            <button type="button" id="prevPage" ${currentPage <= 1 ? "disabled" : ""}>&laquo; Anterior</button>
+            <span class="pagination-info">Página ${currentPage} de ${totalPages}</span>
+            <button type="button" id="nextPage" ${currentPage >= totalPages ? "disabled" : ""}>Próxima &raquo;</button>
+        </div>`;
         container.innerHTML = html;
+
+        document.getElementById("pageSizeSelect").addEventListener("change", (e) => {
+            pageSize = parseInt(e.target.value, 10);
+            currentPage = 1;
+            renderResults();
+        });
+        document.getElementById("prevPage").addEventListener("click", () => {
+            if (currentPage > 1) { currentPage--; renderResults(); }
+        });
+        document.getElementById("nextPage").addEventListener("click", () => {
+            if (currentPage < totalPages) { currentPage++; renderResults(); }
+        });
     }
 
     function formatTags(tags) {
